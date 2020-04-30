@@ -4,10 +4,22 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
     message(FATAL_ERROR "Do not build in-source. Please remove CMakeCache.txt and the CMakeFiles/ directory. Then build out-of-source.")
 endif()
 
-project(cuda_test VERSION 1.0.0 LANGUAGES C CXX)
+project(cuda_test VERSION 1.0.0 LANGUAGES CUDA CXX)
+
+#enable_language(CUDA) # Put this smewhere conditionally if CUDA is optional
+include(CheckLanguage)
+check_language(CUDA)
+
+if(NOT DEFINED CMAKE_CUDA_STANDARD)
+    set(CMAKE_CUDA_STANDARD 20)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+endif()
 
 add_executable(cuda_test 
-    src/main.cpp)
+    src/main.cu)
+
+set_target_properties(cuda_test PROPERTIES
+                            CUDA_SEPERABLE_COMPILATION ON)
 
 find_package(OpenMP)
 
