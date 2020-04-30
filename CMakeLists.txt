@@ -11,7 +11,7 @@ include(CheckLanguage)
 check_language(CUDA)
 
 if(NOT DEFINED CMAKE_CUDA_STANDARD)
-    set(CMAKE_CUDA_STANDARD 20)
+    set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 endif()
 
@@ -87,7 +87,7 @@ target_link_libraries(cuda_test PUBLIC
     ${GLUT_LIBRARY}) # Should use OpenGL::OpenGL on newer linux hosts, but doesn't work on windows and android
 # Shouldn't be needed END
 
-target_compile_features(cuda_test PRIVATE cxx_std_20)
+target_compile_features(cuda_test PRIVATE cxx_std_17)
 
 option(BUILD_TESTS "Build all tests." OFF)
 
@@ -97,7 +97,7 @@ if (BUILD_TESTS)
         tests/main_test.cpp
         tests/catch.hpp)
     target_link_libraries(unit_tests PRIVATE APTracer)
-    target_compile_features(unit_tests PRIVATE cxx_std_20)
+    target_compile_features(unit_tests PRIVATE cxx_std_17)
 
     add_test(unit_tests unit_tests)
 endif()
