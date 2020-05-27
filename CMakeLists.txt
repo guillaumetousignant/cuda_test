@@ -6,7 +6,7 @@ endif()
 
 project(cuda_test VERSION 1.0.0 LANGUAGES CUDA CXX)
 
-#enable_language(CUDA) # Put this smewhere conditionally if CUDA is optional
+#enable_language(CUDA) # Put this somewhere conditionally if CUDA is optional
 include(CheckLanguage)
 check_language(CUDA)
 
