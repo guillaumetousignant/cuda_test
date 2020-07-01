@@ -10,6 +10,19 @@ void add(int n, float *x, float *y)
         y[i] = x[i] + y[i];
 }
 
+class Node_t { // Turn this into seperate vectors, because cache exists
+    public:
+        float coordinate_;
+        Node_t* neighbour_[2];
+        float velocity_;
+        float velocity_next_;
+};
+
+class Edge_t {
+    public:
+        Node_t* nodes_[2];
+};
+
 int main(void)
 {
     int N = 1<<20;
