@@ -23,23 +23,35 @@ class Edge_t {
         Node_t* nodes_[2];
 };
 
+__global__
+void create_nodes(int n, float *coordinates, float *u_0)
+{
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = blockDim.x * gridDim.x;
+    for (int i = index; i < n; i += stride)
+        y[i] = x[i] + y[i];
+}
+
 int main(void)
 {
-    int N = 100;
-    float *x;
+    int N = 1000;
+    float *coordinates;
+    float *u_0;
 
     // Allocate Unified Memory – accessible from CPU or GPU
-    cudaMallocManaged(&x, N*sizeof(float));
+    cudaMallocManaged(&coordinates, N*sizeof(float));
+    cudaMallocManaged(&u_0, N*sizeof(float));
 
     // initialize x and y arrays on the host
     for (int i = 0; i < N; ++i) {
-        x[i] = i * 1.0f/static_cast<double>(N - 1);
+        coordinates[i] = i * 1.0f/static_cast<float>(N - 1);
+        u_0[i] = sin(i * M_PI/static_cast<float>(N - 1));
     }
 
     // Run kernel on 1M elements on the GPU
     int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
-    add<<<numBlocks, blockSize>>>(N, x, y);
+    create_nodes<<<numBlocks, blockSize>>>(N, coordinates, u_0);
 
     // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
