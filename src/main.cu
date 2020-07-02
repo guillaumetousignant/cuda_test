@@ -30,32 +30,32 @@ class Edge_t {
 };
 
 __global__
-void create_nodes(int n, Node_t* nodes, Node_t* boundaries) {
+void create_nodes(int n, Node_t* nodes) {
     const int index = blockIdx.x * blockDim.x + threadIdx.x;
     const int stride = blockDim.x * gridDim.x;
 
     if (index == 0) {
-        boundaries[0] = Node_t(0.0, nullptr, nodes, 0.0f);
-        boundaries[1] = Node_t(1.0, nodes + n - 1, nullptr, 0.0f);
+        nodes[n] = Node_t(0.0, nullptr, nodes, 0.0f);
+        nodes[n + 1] = Node_t(1.0, nodes + n - 1, nullptr, 0.0f);
     }
 
     for (int i = index; i < n; i += stride) {
         float coordinate = (i + 1) * 1.0f/static_cast<float>(n + 1);
         float velocity = sin((i + 1) * M_PI/static_cast<float>(n + 1));
-        Node_t* neighbour0 = (i > 0) ? (nodes + i - 1) : boundaries;
-        Node_t* neighbour1 = (i < (n - 1)) ? (nodes + i + 1) : boundaries + 1;
+        Node_t* neighbour0 = (i > 0) ? (nodes + i - 1) : nodes + n;
+        Node_t* neighbour1 = (i < (n - 1)) ? (nodes + i + 1) : nodes + n + 1;
         nodes[i] = Node_t(coordinate, neighbour0, neighbour1, velocity);
     }
 }
 
 __global__
-void get_velocity(int n, float* velocity, Node_t* nodes, Node_t* boundaries) {
+void get_velocity(int n, float* velocity, Node_t* nodes) {
     const int index = blockIdx.x * blockDim.x + threadIdx.x;
     const int stride = blockDim.x * gridDim.x;
 
     if (index == 0) {
-        velocity[0] = boundaries[0].velocity_;
-        velocity[n + 1] = boundaries[1].velocity_;
+        velocity[0] = nodes[n].velocity_;
+        velocity[n + 1] = nodes[n + 1].velocity_;
     }
 
     for (int i = index; i < n; i += stride) {
@@ -94,23 +94,21 @@ int main(void) {
     const int N = 1000;
     float timestep = 0.1;
     Node_t* nodes;
-    Node_t* boundaries;
 
     // Allocate GPU Memory – accessible from GPU
-    cudaMalloc(&nodes, N*sizeof(Node_t));
-    cudaMalloc(&boundaries, 2*sizeof(Node_t));
+    cudaMalloc(&nodes, (N + 2)*sizeof(Node_t));
 
     // Run kernel on 1000 elements on the GPU, initializing nodes
     int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
-    create_nodes<<<numBlocks, blockSize>>>(N, nodes, boundaries);
+    create_nodes<<<numBlocks, blockSize>>>(N, nodes);
 
     float* velocity;
     cudaMallocManaged(&velocity, (N+2)*sizeof(float));
 
     // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
-    get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes, boundaries);
+    get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
 
     // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
@@ -120,7 +118,6 @@ int main(void) {
 
     // Free memory
     cudaFree(nodes);
-    cudaFree(boundaries);
     cudaFree(velocity);
     
     return 0;
