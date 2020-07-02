@@ -12,7 +12,7 @@ times = []
 x_arrays = []
 ux_arrays = []
 
-t_finder = re.compile(r"SOLUTIONTIME = \d*")
+t_finder = re.compile(r"SOLUTIONTIME = [-+]?\d*\.?\d+")
 I_finder = re.compile(r"I= \d*")
 
 # Input from all the output_tX.dat files
@@ -22,6 +22,7 @@ for filename in filenames:
         lines = file.readlines()
         t_match = t_finder.search(lines[2])
         times.append(float(t_match.group(0)[15:]))
+        print(t_match.group(0)[15:])
         N_match = I_finder.search(lines[2])
         N = int(N_match.group(0)[3:])
         x_arrays.append(np.zeros(N))
