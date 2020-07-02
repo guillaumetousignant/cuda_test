@@ -8,11 +8,11 @@
 class Node_t { // Turn this into seperate vectors, because cache exists
     public:
         __device__ 
-        Node_t(float coordinate, Node_t* neighbour0, Node_t* neighbour1, float velocity) 
+        Node_t(float coordinate, int neighbour0, int neighbour1, float velocity) 
             : coordinate_(coordinate), neighbour_{neighbour0, neighbour1}, velocity_(velocity), velocity_next_(0.0f) {}
 
         float coordinate_;
-        Node_t* neighbour_[2];
+        int neighbour_[2];
         float velocity_;
         float velocity_next_;
 };
@@ -20,9 +20,9 @@ class Node_t { // Turn this into seperate vectors, because cache exists
 class Edge_t {
     public:
         __device__ 
-        Edge_t(Node_t* node0, Node_t* node1) : nodes_{node0, node1} {}
+        Edge_t(int node0, int node1) : nodes_{node0, node1} {}
 
-        Node_t* nodes_[2];
+        int nodes_[2];
 };
 
 __global__
@@ -31,15 +31,15 @@ void create_nodes(int n, Node_t* nodes) {
     const int stride = blockDim.x * gridDim.x;
 
     if (index == 0) {
-        nodes[n] = Node_t(0.0, nullptr, nodes, 0.0f);
-        nodes[n + 1] = Node_t(1.0, nodes + n - 1, nullptr, 0.0f);
+        nodes[n] = Node_t(0.0, n, 0, 0.0f);
+        nodes[n + 1] = Node_t(1.0, n - 1, n + 1, 0.0f);
     }
 
     for (int i = index; i < n; i += stride) {
         float coordinate = (i + 1) * 1.0f/static_cast<float>(n + 1);
         float velocity = sin((i + 1) * M_PI/static_cast<float>(n + 1));
-        Node_t* neighbour0 = (i > 0) ? (nodes + i - 1) : nodes + n;
-        Node_t* neighbour1 = (i < (n - 1)) ? (nodes + i + 1) : nodes + n + 1;
+        int neighbour0 = (i > 0) ? (i - 1) : n;
+        int neighbour1 = (i < (n - 1)) ? (i + 1) : n + 1;
         nodes[i] = Node_t(coordinate, neighbour0, neighbour1, velocity);
     }
 }
@@ -81,10 +81,10 @@ void timestep(int n, float delta_t, Node_t* nodes) {
 
     for (int i = index; i < n; i += stride) {
         float u = nodes[i].velocity_;
-        float u_L = nodes[i].neighbour_[0]->velocity_;
-        float u_R = nodes[i].neighbour_[1]->velocity_;
-        float r_L = std::abs(nodes[i].coordinate_ - nodes[i].neighbour_[0]->coordinate_);
-        float r_R = std::abs(nodes[i].coordinate_ - nodes[i].neighbour_[1]->coordinate_);
+        float u_L = nodes[nodes[i].neighbour_[0]].velocity_;
+        float u_R = nodes[nodes[i].neighbour_[1]].velocity_;
+        float r_L = std::abs(nodes[i].coordinate_ - nodes[nodes[i].neighbour_[0]].coordinate_);
+        float r_R = std::abs(nodes[i].coordinate_ - nodes[nodes[i].neighbour_[1]].coordinate_);
 
         nodes[i].velocity_next_ = u * (1 - delta_t * ((u_R - u_L - ((u_R + u_L - 2 * u) * (std::pow(r_R, 2) - std::pow(r_L, 2)))/(std::pow(r_R, 2) + std::pow(r_L, 2)))/(r_R + r_L) 
                     /(1 + (r_R - r_L) * (std::pow(r_R, 2) - std::pow(r_L, 2))/((r_R + r_L) * (std::pow(r_R, 2) + std::pow(r_L, 2))))));
