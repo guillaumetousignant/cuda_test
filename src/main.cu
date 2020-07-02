@@ -149,8 +149,8 @@ int main(void) {
     // Calculations
     for (int iter = 1; iter <= iter_max; ++iter) {
         time += delta_t;
-        timestep(N, delta_t, nodes);
-        update(N, nodes);
+        timestep<<<numBlocks, blockSize>>>(N, delta_t, nodes);
+        update<<<numBlocks, blockSize>>>(N, nodes);
 
         if (!(iter % 100)) {
             get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
