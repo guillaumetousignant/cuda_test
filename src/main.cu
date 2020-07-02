@@ -123,7 +123,7 @@ int main(void) {
     const int N = 1000;
     float delta_t = 0.1;
     float time = 0.0;
-    int iter_max = 8;
+    int iter_max = 4;
     int write_interval = 1;
     Node_t* nodes;
 
