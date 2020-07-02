@@ -13,7 +13,7 @@ void add(int n, float *x, float *y)
 class Node_t { // Turn this into seperate vectors, because cache exists
     public:
         float coordinate_;
-        Node_t* neighbour_[2];
+        int neighbour_[2];
         float velocity_;
         float velocity_next_;
 };
