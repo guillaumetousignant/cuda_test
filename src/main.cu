@@ -1,13 +1,8 @@
 #include <iostream>
+#include <fstream>
+#include <sstream> 
+#include <iomanip>
 #include <cmath>
-// Kernel function to add the elements of two arrays
-__global__
-void add(int n, float* x, float* y) {
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    int stride = blockDim.x * gridDim.x;
-    for (int i = index; i < n; i += stride)
-        y[i] = x[i] + y[i];
-}
 
 class Node_t { // Turn this into seperate vectors, because cache exists
     public:
@@ -64,16 +59,31 @@ void get_velocity(int n, float* velocity, Node_t* nodes) {
 }
 
 __global__
+void get_coordinates(int n, float* coordinates, Node_t* nodes) {
+    const int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const int stride = blockDim.x * gridDim.x;
+
+    if (index == 0) {
+        coordinates[0] = nodes[n].coordinate_;
+        coordinates[n + 1] = nodes[n + 1].coordinate_;
+    }
+
+    for (int i = index; i < n; i += stride) {
+        coordinates[i + 1] = nodes[i].coordinate_;
+    }
+}
+
+__global__
 void timestep(int n, float delta_t, Node_t* nodes) {
     const int index = blockIdx.x * blockDim.x + threadIdx.x;
     const int stride = blockDim.x * gridDim.x;
 
     for (int i = index; i < n; i += stride) {
-        u = nodes[i].velocity_;
-        u_L = nodes[i].neighbour_[0]->velocity_;
-        u_R = nodes[i].neighbour_[1]->velocity_;
-        r_L = std::abs(nodes[i].coordinate_ - nodes[i].neighbour_[0]->coordinate_);
-        r_R = std::abs(nodes[i].coordinate_ - nodes[i].neighbour_[1]->coordinate_);
+        float u = nodes[i].velocity_;
+        float u_L = nodes[i].neighbour_[0]->velocity_;
+        float u_R = nodes[i].neighbour_[1]->velocity_;
+        float r_L = std::abs(nodes[i].coordinate_ - nodes[i].neighbour_[0]->coordinate_);
+        float r_R = std::abs(nodes[i].coordinate_ - nodes[i].neighbour_[1]->coordinate_);
 
         nodes[i].velocity_next_ = u * (1 - delta_t * ((u_R - u_L - ((u_R + u_L - 2 * u) * (std::pow(r_R, 2) - std::pow(r_L, 2)))/(std::pow(r_R, 2) + std::pow(r_L, 2)))/(r_R + r_L) 
                     /(1 + (r_R - r_L) * (std::pow(r_R, 2) - std::pow(r_L, 2))/((r_R + r_L) * (std::pow(r_R, 2) + std::pow(r_L, 2))))));
@@ -90,9 +100,30 @@ void update(int n, Node_t* nodes) {
     }
 }
 
+void write_data(int n, float time, float* velocity, float* coordinates) {
+    std::stringstream ss;
+    ofstream file;
+
+    ss << "data/output_t" << time << ".dat";
+    file.open (ss.str());
+
+    file << "TITLE = \"Velocity  at t= " << time << "\"" << std::endl;<
+    file << "VARIABLES = \"X\", \"U_x\"" << std::endl;
+    file << "ZONE T= \"Zone     1\",  I= " << n + 2 << ",  J= 1,  DATAPACKING = POINT, SOLUTIONTIME = " << time << std::endl;
+
+    file << std::setfill('0') << std::setw(8) << coordinates[n] << " " << std::setfill('0') << std::setw(8) << velocity[n] << std::endl;
+    for (int i = 0; i < n; ++i) {
+        file << std::setfill('0') << std::setw(8) << coordinates[i] << " " << std::setfill('0') << std::setw(8) << velocity[i] << std::endl;
+    }
+    file << std::setfill('0') << std::setw(8) << coordinates[n + 1] << " " << std::setfill('0') << std::setw(8) << velocity[n + 1] << std::endl;
+
+    file.close();
+}
+
 int main(void) {
     const int N = 1000;
     float timestep = 0.1;
+    float time = 0.0;
     Node_t* nodes;
 
     // Allocate GPU Memory – accessible from GPU
@@ -105,13 +136,14 @@ int main(void) {
 
     float* velocity;
     cudaMallocManaged(&velocity, (N+2)*sizeof(float));
+    float* coordinates;
+    cudaMallocManaged(&coordinates, (N+2)*sizeof(float));
+    get_coordinates<<<numBlocks, blockSize>>>(N, coordinates, nodes);    
 
     // Wait for GPU to finish before accessing on host
-    cudaDeviceSynchronize();
     get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
-
-    // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
+    write_data(N, time, velocity, coordinates);
     for (int i = 0; i < N+2; ++i) {
         std::cout << "u_" << i << ": " << velocity[i] << std::endl;
     }
