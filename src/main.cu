@@ -20,7 +20,7 @@ class Node_t { // Turn this into seperate vectors, because cache exists
 
 class Edge_t {
     public:
-        Node_t* nodes_[2];
+        int nodes_[2];
 };
 
 __global__
@@ -37,10 +37,12 @@ int main(void)
     int N = 1000;
     float *coordinates;
     float *u_0;
+    Node_t *nodes;
 
     // Allocate Unified Memory – accessible from CPU or GPU
     cudaMallocManaged(&coordinates, N*sizeof(float));
     cudaMallocManaged(&u_0, N*sizeof(float));
+    cudaMalloc(&nodes, N*sizeof(Node_t));
 
     // initialize x and y arrays on the host
     for (int i = 0; i < N; ++i) {
@@ -63,8 +65,9 @@ int main(void)
     std::cout << "Max error: " << maxError << std::endl;
 
     // Free memory
-    cudaFree(x);
-    cudaFree(y);
+    cudaFree(coordinates);
+    cudaFree(u_0);
+    cudaFree(nodes);
     
     return 0;
 }
