@@ -2,8 +2,7 @@
 #include <cmath>
 // Kernel function to add the elements of two arrays
 __global__
-void add(int n, float* x, float* y)
-{
+void add(int n, float* x, float* y) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     for (int i = index; i < n; i += stride)
@@ -31,8 +30,7 @@ class Edge_t {
 };
 
 __global__
-void create_nodes(int n, Node_t* nodes, Node_t* boundaries)
-{
+void create_nodes(int n, Node_t* nodes, Node_t* boundaries) {
     const int index = blockIdx.x * blockDim.x + threadIdx.x;
     const int stride = blockDim.x * gridDim.x;
 
@@ -50,8 +48,22 @@ void create_nodes(int n, Node_t* nodes, Node_t* boundaries)
     }
 }
 
-int main(void)
-{
+__global__
+void get_velocity(int n, float* velocity, Node_t* nodes, Node_t* boundaries) {
+    const int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const int stride = blockDim.x * gridDim.x;
+
+    if (index == 0) {
+        velocity[0] = boundaries[0].velocity_;
+        velocity[n + 1] = boundaries[1].velocity_;
+    }
+
+    for (int i = index; i < n; i += stride) {
+        velocity[i + 1] = nodes[i].velocity_;
+    }
+}
+
+int main(void) {
     const int N = 1000;
     Node_t* nodes;
     Node_t* boundaries;
@@ -68,6 +80,16 @@ int main(void)
 
     // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
+
+    float* velocity;
+    cudaMallocManaged(&velocity, (N+2)*sizeof(float));
+    get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes, boundaries);
+
+    // Wait for GPU to finish before accessing on host
+    cudaDeviceSynchronize();
+    for (int i = 0; i < N+2; ++i) {
+        std::cout << "u_" << i << ": " << velocity[i] << std::endl;
+    }
 
     // Check for errors (all values should be 3.0f)
     /*float maxError = 0.0f;
