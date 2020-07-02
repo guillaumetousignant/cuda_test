@@ -122,7 +122,7 @@ void write_data(int n, float time, float* velocity, float* coordinates) {
 }
 
 int main(void) {
-    const int N = 1000;
+    const int N = 1000000;
     float delta_t = 0.1;
     float time = 0.0;
     int iter_max = 10;
@@ -161,13 +161,13 @@ int main(void) {
             write_data(N, time, velocity, coordinates);
         }
     }
+
+    get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
+    cudaDeviceSynchronize();
     auto t_end = std::chrono::high_resolution_clock::now();
     std::cout << iter_max << " iterations done in " 
             << std::chrono::duration<double, std::milli>(t_end-t_start).count()/1000.0 
             << "s." << std::endl;
-
-    get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
-    cudaDeviceSynchronize();
     write_data(N, time, velocity, coordinates);
 
     // Free memory
