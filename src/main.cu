@@ -72,17 +72,16 @@ int main(void) {
     cudaMalloc(&nodes, N*sizeof(Node_t));
     cudaMalloc(&boundaries, 2*sizeof(Node_t));
 
-
     // Run kernel on 1000 elements on the GPU, initializing nodes
     int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
     create_nodes<<<numBlocks, blockSize>>>(N, nodes, boundaries);
 
-    // Wait for GPU to finish before accessing on host
-    cudaDeviceSynchronize();
-
     float* velocity;
     cudaMallocManaged(&velocity, (N+2)*sizeof(float));
+
+    // Wait for GPU to finish before accessing on host
+    cudaDeviceSynchronize();
     get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes, boundaries);
 
     // Wait for GPU to finish before accessing on host
