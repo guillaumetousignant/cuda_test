@@ -100,6 +100,7 @@ int main(void) {
     // Free memory
     cudaFree(nodes);
     cudaFree(boundaries);
+    cudaFree(velocity);
     
     return 0;
 }
