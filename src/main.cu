@@ -64,7 +64,7 @@ void get_velocity(int n, float* velocity, Node_t* nodes, Node_t* boundaries) {
 }
 
 __global__
-void timestep(int n, float delta_t, Node_t* nodes, Node_t* boundaries) {
+void timestep(int n, float delta_t, Node_t* nodes) {
     const int index = blockIdx.x * blockDim.x + threadIdx.x;
     const int stride = blockDim.x * gridDim.x;
 
