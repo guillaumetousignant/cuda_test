@@ -63,8 +63,36 @@ void get_velocity(int n, float* velocity, Node_t* nodes, Node_t* boundaries) {
     }
 }
 
+__global__
+void timestep(int n, float delta_t, Node_t* nodes, Node_t* boundaries) {
+    const int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const int stride = blockDim.x * gridDim.x;
+
+    for (int i = index; i < n; i += stride) {
+        u = nodes[i].velocity_;
+        u_L = nodes[i].neighbour_[0]->velocity_;
+        u_R = nodes[i].neighbour_[1]->velocity_;
+        r_L = std::abs(nodes[i].coordinate_ - nodes[i].neighbour_[0]->coordinate_);
+        r_R = std::abs(nodes[i].coordinate_ - nodes[i].neighbour_[1]->coordinate_);
+
+        nodes[i].velocity_next_ = u * (1 - delta_t * ((u_R - u_L - ((u_R + u_L - 2 * u) * (std::pow(r_R, 2) - std::pow(r_L, 2)))/(std::pow(r_R, 2) + std::pow(r_L, 2)))/(r_R + r_L) 
+                    /(1 + (r_R - r_L) * (std::pow(r_R, 2) - std::pow(r_L, 2))/((r_R + r_L) * (std::pow(r_R, 2) + std::pow(r_L, 2))))));
+    }
+}
+
+__global__
+void update(int n, Node_t* nodes) {
+    const int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const int stride = blockDim.x * gridDim.x;
+
+    for (int i = index; i < n; i += stride) {
+        nodes[i].velocity_ = nodes[i].velocity_next_;
+    }
+}
+
 int main(void) {
     const int N = 1000;
+    float timestep = 0.1;
     Node_t* nodes;
     Node_t* boundaries;
 
