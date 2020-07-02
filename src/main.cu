@@ -3,6 +3,7 @@
 #include <sstream> 
 #include <iomanip>
 #include <cmath>
+#include <chrono>
 
 class Node_t { // Turn this into seperate vectors, because cache exists
     public:
@@ -124,7 +125,7 @@ int main(void) {
     const int N = 1000;
     float delta_t = 0.1;
     float time = 0.0;
-    int iter_max = 1000;
+    int iter_max = 1;
     Node_t* nodes;
 
     // Allocate GPU Memory – accessible from GPU
@@ -147,6 +148,7 @@ int main(void) {
     write_data(N, time, velocity, coordinates);
 
     // Calculations
+    auto t_start = std::chrono::high_resolution_clock::now(); 
     for (int iter = 1; iter <= iter_max; ++iter) {
         time += delta_t;
         timestep<<<numBlocks, blockSize>>>(N, delta_t, nodes);
@@ -158,6 +160,10 @@ int main(void) {
             write_data(N, time, velocity, coordinates);
         }
     }
+    auto t_end = std::chrono::high_resolution_clock::now();
+    std::cout << iter_max << "iterations done in " 
+            << std::chrono::duration<double, std::milli>(t_end-t_start).count()/1000.0 
+            << "s." << std::endl;
 
     get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
     cudaDeviceSynchronize();
