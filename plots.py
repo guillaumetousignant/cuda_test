@@ -16,11 +16,11 @@ t_finder = re.compile(r"SOLUTIONTIME = \d*")
 I_finder = re.compile(r"I= \d*")
 
 # Input from all the output_tX.dat files
-filenames = [f for f in os.listdir(os.path.join(os.getcwd(), 'data')) if os.path.isfile(f) and "output_t" in f and f.endswith(".dat")]
+filenames = [f for f in os.listdir(os.path.join(os.getcwd(), 'data')) if os.path.isfile(os.path.join(os.getcwd(), 'data', f)) and "output_t" in f and f.endswith(".dat")]
 for filename in filenames:
-    with open(filename, 'r') as file:
+    with open(os.path.join(os.getcwd(), 'data', filename), 'r') as file:
         lines = file.readlines()
-        t_match = t_finder.search(lines[0])
+        t_match = t_finder.search(lines[2])
         times.append(float(t_match.group(0)[15:]))
         N_match = I_finder.search(lines[2])
         N = int(N_match.group(0)[3:])
