@@ -12,6 +12,7 @@ void add(int n, float* x, float* y)
 
 class Node_t { // Turn this into seperate vectors, because cache exists
     public:
+        __device__ 
         Node_t(float coordinate, Node_t* neighbour0, Node_t* neighbour1, float velocity) 
             : coordinate_(coordinate), neighbour_{neighbour0, neighbour1}, velocity_(velocity), velocity_next_(0.0) {}
 
@@ -23,6 +24,7 @@ class Node_t { // Turn this into seperate vectors, because cache exists
 
 class Edge_t {
     public:
+        __device__ 
         Edge_t(Node_t* node0, Node_t* node1) : nodes_{node0, node1} {}
 
         Node_t* nodes_[2];
@@ -42,8 +44,8 @@ void create_nodes(int n, Node_t* nodes, Node_t* boundaries)
     for (int i = index; i < n; i += stride) {
         float coordinate = (i + 1) * 1.0f/static_cast<float>(n + 1);
         float velocity = sin((i + 1) * M_PI/static_cast<float>(n + 1));
-        Node_t* neighbour0 = (i > 0) * (nodes + i - 1) + (i <= 0) * boundaries;
-        Node_t* neighbour1 = (i < (n - 1)) * (nodes + i + 1) + (i >= (n - 1)) * boundaries + 1;
+        Node_t* neighbour0 = (i > 0) ? (nodes + i - 1) : boundaries;
+        Node_t* neighbour1 = (i < (n - 1)) ? (nodes + i + 1) : boundaries + 1;
         nodes[i] = Node_t(coordinate, neighbour0, neighbour1, velocity);
     }
 }
