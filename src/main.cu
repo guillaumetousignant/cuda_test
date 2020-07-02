@@ -102,7 +102,7 @@ void update(int n, Node_t* nodes) {
 
 void write_data(int n, float time, float* velocity, float* coordinates) {
     std::stringstream ss;
-    ofstream file;
+    std::ofstream file;
 
     ss << "data/output_t" << time << ".dat";
     file.open (ss.str());
