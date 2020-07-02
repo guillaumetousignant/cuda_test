@@ -121,10 +121,10 @@ void write_data(int n, float time, float* velocity, float* coordinates) {
 
 int main(void) {
     const int N = 1000;
-    float delta_t = 0.01;
+    float delta_t = 0.1;
     float time = 0.0;
-    int iter_max = 1000;
-    int write_interval = 100;
+    int iter_max = 10;
+    int write_interval = 1;
     Node_t* nodes;
 
     // Allocate GPU Memory – accessible from GPU
