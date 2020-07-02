@@ -56,13 +56,10 @@ void get_velocity(int n, float* velocity, Node_t* nodes, Node_t* boundaries) {
     if (index == 0) {
         velocity[0] = boundaries[0].velocity_;
         velocity[n + 1] = boundaries[1].velocity_;
-        velocity[0] = 0.0f;
-        velocity[n + 1] = 0.0f;
     }
 
     for (int i = index; i < n; i += stride) {
         velocity[i + 1] = nodes[i].velocity_;
-        velocity[i + 1] = 0.0f;
     }
 }
 
@@ -93,12 +90,6 @@ int main(void) {
     for (int i = 0; i < N+2; ++i) {
         std::cout << "u_" << i << ": " << velocity[i] << std::endl;
     }
-
-    // Check for errors (all values should be 3.0f)
-    /*float maxError = 0.0f;
-    for (int i = 0; i < N; i++)
-        maxError = fmax(maxError, fabs(y[i]-3.0f));
-    std::cout << "Max error: " << maxError << std::endl;*/
 
     // Free memory
     cudaFree(nodes);
