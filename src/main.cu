@@ -122,8 +122,9 @@ void write_data(int n, float time, float* velocity, float* coordinates) {
 
 int main(void) {
     const int N = 1000;
-    float timestep = 0.1;
+    float delta_t = 0.1;
     float time = 0.0;
+    int iter_max = 1000;
     Node_t* nodes;
 
     // Allocate GPU Memory – accessible from GPU
@@ -141,6 +142,23 @@ int main(void) {
     get_coordinates<<<numBlocks, blockSize>>>(N, coordinates, nodes);    
 
     // Wait for GPU to finish before accessing on host
+    get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
+    cudaDeviceSynchronize();
+    write_data(N, time, velocity, coordinates);
+
+    // Calculations
+    for (int iter = 1; iter <= iter_max; ++iter) {
+        time += timestep;
+        timestep(N, delta_t, nodes);
+        update(N, nodes);
+
+        if (!(iter % 100)) {
+            get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
+            cudaDeviceSynchronize();
+            write_data(N, time, velocity, coordinates);
+        }
+    }
+
     get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
     cudaDeviceSynchronize();
     write_data(N, time, velocity, coordinates);
