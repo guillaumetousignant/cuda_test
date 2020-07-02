@@ -148,7 +148,7 @@ int main(void) {
 
     // Calculations
     for (int iter = 1; iter <= iter_max; ++iter) {
-        time += timestep;
+        time += delta_t;
         timestep(N, delta_t, nodes);
         update(N, nodes);
 
