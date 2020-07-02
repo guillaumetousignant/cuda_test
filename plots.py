@@ -22,7 +22,6 @@ for filename in filenames:
         lines = file.readlines()
         t_match = t_finder.search(lines[2])
         times.append(float(t_match.group(0)[15:]))
-        print(t_match.group(0)[15:])
         N_match = I_finder.search(lines[2])
         N = int(N_match.group(0)[3:])
         x_arrays.append(np.zeros(N))
@@ -42,9 +41,9 @@ for i in range(len(filenames)):
 
 ax.grid()
 ax.set_xlim(0, 1)
-ax.set_ylabel('$U_x$')
-ax.set_xlabel('x')
-ax.set_title("$U_x$")
+ax.set_ylabel('$U_x$ [$m/s$]')
+ax.set_xlabel('x [m]')
+ax.set_title("$U_x$ along x")
 ax.legend(legend_list, loc='upper right')
 
 plt.show()
