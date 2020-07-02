@@ -13,7 +13,7 @@ class Node_t { // Turn this into seperate vectors, because cache exists
     public:
         __device__ 
         Node_t(float coordinate, Node_t* neighbour0, Node_t* neighbour1, float velocity) 
-            : coordinate_(coordinate), neighbour_{neighbour0, neighbour1}, velocity_(velocity), velocity_next_(0.0) {}
+            : coordinate_(coordinate), neighbour_{neighbour0, neighbour1}, velocity_(velocity), velocity_next_(0.0f) {}
 
         float coordinate_;
         Node_t* neighbour_[2];
@@ -35,8 +35,8 @@ void create_nodes(int n, Node_t* nodes, Node_t* boundaries) {
     const int stride = blockDim.x * gridDim.x;
 
     if (index == 0) {
-        boundaries[0] = Node_t(0.0, nullptr, nodes, 0.0);
-        boundaries[1] = Node_t(1.0, nodes + n - 1, nullptr, 0.0);
+        boundaries[0] = Node_t(0.0, nullptr, nodes, 0.0f);
+        boundaries[1] = Node_t(1.0, nodes + n - 1, nullptr, 0.0f);
     }
 
     for (int i = index; i < n; i += stride) {
@@ -56,10 +56,13 @@ void get_velocity(int n, float* velocity, Node_t* nodes, Node_t* boundaries) {
     if (index == 0) {
         velocity[0] = boundaries[0].velocity_;
         velocity[n + 1] = boundaries[1].velocity_;
+        velocity[0] = 0.0f;
+        velocity[n + 1] = 0.0f;
     }
 
     for (int i = index; i < n; i += stride) {
         velocity[i + 1] = nodes[i].velocity_;
+        velocity[i + 1] = 0.0f;
     }
 }
 
