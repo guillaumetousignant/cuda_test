@@ -107,15 +107,15 @@ void write_data(int n, float time, float* velocity, float* coordinates) {
     ss << "data/output_t" << time << ".dat";
     file.open (ss.str());
 
-    file << "TITLE = \"Velocity  at t= " << time << "\"" << std::endl;<
+    file << "TITLE = \"Velocity  at t= " << time << "\"" << std::endl;
     file << "VARIABLES = \"X\", \"U_x\"" << std::endl;
     file << "ZONE T= \"Zone     1\",  I= " << n + 2 << ",  J= 1,  DATAPACKING = POINT, SOLUTIONTIME = " << time << std::endl;
 
-    file << std::setfill('0') << std::setw(8) << coordinates[n] << " " << std::setfill('0') << std::setw(8) << velocity[n] << std::endl;
+    file << std::setw(12) << coordinates[n] << " " << std::setw(12) << velocity[n] << std::endl;
     for (int i = 0; i < n; ++i) {
-        file << std::setfill('0') << std::setw(8) << coordinates[i] << " " << std::setfill('0') << std::setw(8) << velocity[i] << std::endl;
+        file << std::setw(12) << coordinates[i] << " " << std::setw(12) << velocity[i] << std::endl;
     }
-    file << std::setfill('0') << std::setw(8) << coordinates[n + 1] << " " << std::setfill('0') << std::setw(8) << velocity[n + 1] << std::endl;
+    file << std::setw(12) << coordinates[n + 1] << " " << std::setw(12) << velocity[n + 1] << std::endl;
 
     file.close();
 }
@@ -144,9 +144,6 @@ int main(void) {
     get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
     cudaDeviceSynchronize();
     write_data(N, time, velocity, coordinates);
-    for (int i = 0; i < N+2; ++i) {
-        std::cout << "u_" << i << ": " << velocity[i] << std::endl;
-    }
 
     // Free memory
     cudaFree(nodes);
