@@ -125,7 +125,8 @@ int main(void) {
     const int N = 1000;
     float delta_t = 0.1;
     float time = 0.0;
-    int iter_max = 1;
+    int iter_max = 10;
+    int write_interval = 100;
     Node_t* nodes;
 
     // Allocate GPU Memory – accessible from GPU
@@ -154,7 +155,7 @@ int main(void) {
         timestep<<<numBlocks, blockSize>>>(N, delta_t, nodes);
         update<<<numBlocks, blockSize>>>(N, nodes);
 
-        if (!(iter % 100)) {
+        if (!(iter % write_interval)) {
             get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
             cudaDeviceSynchronize();
             write_data(N, time, velocity, coordinates);
