@@ -30,16 +30,11 @@ void create_nodes(int n, Node_t* nodes) {
     const int index = blockIdx.x * blockDim.x + threadIdx.x;
     const int stride = blockDim.x * gridDim.x;
 
-    if (index == 0) {
-        nodes[n - 2] = Node_t(0.0, n - 2, 0, 0.0f);
-        nodes[n - 1] = Node_t(1.0, n - 3, n - 1, 0.0f);
-    }
-
-    for (int i = index; i < n - 2; i += stride) {
-        float coordinate = (i + 1) * 1.0f/static_cast<float>(n - 1);
-        float velocity = sin((i + 1) * M_PI/static_cast<float>(n - 1));
-        int neighbour0 = (i > 0) ? (i - 1) : n - 2;
-        int neighbour1 = (i < (n - 1)) ? (i + 1) : n - 1;
+    for (int i = index; i < n; i += stride) {
+        float coordinate = i * 1.0f/static_cast<float>(n - 1);
+        float velocity = sin(i * M_PI/static_cast<float>(n - 1));
+        int neighbour0 = (i > 0) ? (i - 1) : i;
+        int neighbour1 = (i < n - 1) ? (i + 1) : i;
         nodes[i] = Node_t(coordinate, neighbour0, neighbour1, velocity);
     }
 }
@@ -49,13 +44,8 @@ void get_velocity(int n, float* velocity, Node_t* nodes) {
     const int index = blockIdx.x * blockDim.x + threadIdx.x;
     const int stride = blockDim.x * gridDim.x;
 
-    if (index == 0) {
-        velocity[0] = nodes[n - 2].velocity_;
-        velocity[n - 1] = nodes[n - 1].velocity_;
-    }
-
-    for (int i = index; i < n - 2; i += stride) {
-        velocity[i + 1] = nodes[i].velocity_;
+    for (int i = index; i < n; i += stride) {
+        velocity[i] = nodes[i].velocity_;
     }
 }
 
@@ -64,12 +54,7 @@ void get_coordinates(int n, float* coordinates, Node_t* nodes) {
     const int index = blockIdx.x * blockDim.x + threadIdx.x;
     const int stride = blockDim.x * gridDim.x;
 
-    if (index == 0) {
-        coordinates[0] = nodes[n - 2].coordinate_;
-        coordinates[n - 1] = nodes[n - 1].coordinate_;
-    }
-
-    for (int i = index; i < n - 2; i += stride) {
+    for (int i = index; i < n; i += stride) {
         coordinates[i + 1] = nodes[i].coordinate_;
     }
 }
