@@ -31,15 +31,15 @@ void create_nodes(int n, Node_t* nodes) {
     const int stride = blockDim.x * gridDim.x;
 
     if (index == 0) {
-        nodes[n] = Node_t(0.0, n, 0, 0.0f);
-        nodes[n + 1] = Node_t(1.0, n - 1, n + 1, 0.0f);
+        nodes[n - 2] = Node_t(0.0, n - 2, 0, 0.0f);
+        nodes[n - 1] = Node_t(1.0, n - 3, n - 1, 0.0f);
     }
 
-    for (int i = index; i < n; i += stride) {
-        float coordinate = (i + 1) * 1.0f/static_cast<float>(n + 1);
-        float velocity = sin((i + 1) * M_PI/static_cast<float>(n + 1));
-        int neighbour0 = (i > 0) ? (i - 1) : n;
-        int neighbour1 = (i < (n - 1)) ? (i + 1) : n + 1;
+    for (int i = index; i < n - 2; i += stride) {
+        float coordinate = (i + 1) * 1.0f/static_cast<float>(n - 1);
+        float velocity = sin((i + 1) * M_PI/static_cast<float>(n - 1));
+        int neighbour0 = (i > 0) ? (i - 1) : n - 2;
+        int neighbour1 = (i < (n - 1)) ? (i + 1) : n - 1;
         nodes[i] = Node_t(coordinate, neighbour0, neighbour1, velocity);
     }
 }
@@ -50,11 +50,11 @@ void get_velocity(int n, float* velocity, Node_t* nodes) {
     const int stride = blockDim.x * gridDim.x;
 
     if (index == 0) {
-        velocity[0] = nodes[n].velocity_;
-        velocity[n + 1] = nodes[n + 1].velocity_;
+        velocity[0] = nodes[n - 2].velocity_;
+        velocity[n - 1] = nodes[n - 1].velocity_;
     }
 
-    for (int i = index; i < n; i += stride) {
+    for (int i = index; i < n - 2; i += stride) {
         velocity[i + 1] = nodes[i].velocity_;
     }
 }
@@ -65,11 +65,11 @@ void get_coordinates(int n, float* coordinates, Node_t* nodes) {
     const int stride = blockDim.x * gridDim.x;
 
     if (index == 0) {
-        coordinates[0] = nodes[n].coordinate_;
-        coordinates[n + 1] = nodes[n + 1].coordinate_;
+        coordinates[0] = nodes[n - 2].coordinate_;
+        coordinates[n - 1] = nodes[n - 1].coordinate_;
     }
 
-    for (int i = index; i < n; i += stride) {
+    for (int i = index; i < n - 2; i += stride) {
         coordinates[i + 1] = nodes[i].coordinate_;
     }
 }
@@ -110,9 +110,9 @@ void write_data(int n, float time, float* velocity, float* coordinates) {
 
     file << "TITLE = \"Velocity  at t= " << time << "\"" << std::endl;
     file << "VARIABLES = \"X\", \"U_x\"" << std::endl;
-    file << "ZONE T= \"Zone     1\",  I= " << n + 2 << ",  J= 1,  DATAPACKING = POINT, SOLUTIONTIME = " << time << std::endl;
+    file << "ZONE T= \"Zone     1\",  I= " << n << ",  J= 1,  DATAPACKING = POINT, SOLUTIONTIME = " << time << std::endl;
 
-    for (int i = 0; i < n+2; ++i) {
+    for (int i = 0; i < n; ++i) {
         file << std::setw(12) << coordinates[i] << " " << std::setw(12) << velocity[i] << std::endl;
     }
 
@@ -128,7 +128,7 @@ int main(void) {
     Node_t* nodes;
 
     // Allocate GPU Memory – accessible from GPU
-    cudaMalloc(&nodes, (N + 2)*sizeof(Node_t));
+    cudaMalloc(&nodes, (N)*sizeof(Node_t));
 
     // Run kernel on 1000 elements on the GPU, initializing nodes
     int blockSize = 256;
@@ -136,9 +136,9 @@ int main(void) {
     create_nodes<<<numBlocks, blockSize>>>(N, nodes);
 
     float* velocity;
-    cudaMallocManaged(&velocity, (N+2)*sizeof(float));
+    cudaMallocManaged(&velocity, (N)*sizeof(float));
     float* coordinates;
-    cudaMallocManaged(&coordinates, (N+2)*sizeof(float));
+    cudaMallocManaged(&coordinates, (N)*sizeof(float));
     get_coordinates<<<numBlocks, blockSize>>>(N, coordinates, nodes);    
 
     // Wait for GPU to finish before accessing on host
