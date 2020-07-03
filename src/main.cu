@@ -86,7 +86,7 @@ void timestep(int n, float delta_t, Node_t* nodes) {
         float r_L = std::abs(nodes[i].coordinate_ - nodes[nodes[i].neighbour_[0]].coordinate_);
         float r_R = std::abs(nodes[i].coordinate_ - nodes[nodes[i].neighbour_[1]].coordinate_);
 
-        nodes[i].velocity_next_ = u * (1 - 2 * delta_t * ((u_R - u_L - ((u_R + u_L - 2 * u) * (std::pow(r_R, 2) - std::pow(r_L, 2)))/(std::pow(r_R, 2) + std::pow(r_L, 2)))/(r_R + r_L) 
+        nodes[i].velocity_next_ = u * (1 - delta_t * ((u_R - u_L - ((u_R + u_L - 2 * u) * (std::pow(r_R, 2) - std::pow(r_L, 2)))/(std::pow(r_R, 2) + std::pow(r_L, 2)))/(r_R + r_L) 
                     /(1 + (r_R - r_L) * (std::pow(r_R, 2) - std::pow(r_L, 2))/((r_R + r_L) * (std::pow(r_R, 2) + std::pow(r_L, 2))))));
     }
 }
@@ -150,8 +150,8 @@ int main(void) {
     auto t_start = std::chrono::high_resolution_clock::now(); 
     for (int iter = 1; iter <= iter_max; ++iter) {
         time += delta_t;
-        timestep<<<numBlocks, blockSize>>>(N, delta_t, nodes);
-        update<<<numBlocks, blockSize>>>(N, nodes);
+        timestep<<<numBlocks, blockSize>>>(N + 2, delta_t, nodes);
+        update<<<numBlocks, blockSize>>>(N + 2, nodes);
 
         if (!(iter % write_interval)) {
             get_velocity<<<numBlocks, blockSize>>>(N, velocity, nodes);
