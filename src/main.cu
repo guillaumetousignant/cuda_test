@@ -7,7 +7,7 @@
 
 constexpr double pi = 3.14159265358979323846;
 
-class Node_t { // Turn this into seperate vectors, because cache exists
+class Node_t { // Turn this into separate vectors, because cache exists
     public:
         __device__ 
         Node_t(float coordinate, int neighbour0, int neighbour1, float velocity) 
