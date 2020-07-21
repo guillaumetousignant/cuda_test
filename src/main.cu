@@ -110,8 +110,8 @@ int main(void) {
     const int N = 1000;
     float delta_t = 0.00001f;
     float time = 0.0f;
-    int iter_max = 40000;
-    int write_interval = 5000;
+    int iter_max = 20000;
+    int write_interval = 2000;
     Node_t* nodes;
 
     // Allocate GPU Memory – accessible from GPU
