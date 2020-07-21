@@ -34,7 +34,7 @@ void create_nodes(int n, Node_t* nodes) {
 
     for (int i = index; i < n; i += stride) {
         float coordinate = i * 1.0f/static_cast<float>(n - 1);
-        float velocity = sin(i * pi/static_cast<float>(n - 1));
+        float velocity = sin(i * 2.0f * pi/static_cast<float>(n - 1));
         int neighbour0 = (i > 0) ? (i - 1) : i;
         int neighbour1 = (i < n - 1) ? (i + 1) : i;
         nodes[i] = Node_t(coordinate, neighbour0, neighbour1, velocity);
