@@ -36,7 +36,6 @@ find_package(APTracer REQUIRED)
 target_include_directories(cuda_test 
     PRIVATE
         include/
-        $ENV{ANOTHER_PATH_TRACER_DIR}/include/ # Should not be needed but what do I know
 )
 
 target_link_libraries(cuda_test PRIVATE APTracer)
